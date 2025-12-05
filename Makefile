@@ -3,20 +3,16 @@
 SUBMODULES = $(wildcard */)
 
 build:
-	multimod build
+	bash ./container/run.sh multimod build
 
 test:
-	multimod test
+	bash ./container/run.sh multimod test
 
 lint:
-	multimod lint
+	bash ./container/run.sh multimod lint
 
 deps:
-	multimod update
+	bash ./container/run.sh multimod update
 
 pr:
-	go install cloudeng.io/go/cmd/goannotate@latest \
-		cloudeng.io/go/cmd/gousage@latest \
-		cloudeng.io/go/cmd/gomarkdown@latest
-	go install golang.org/x/tools/cmd/goimports@latest
-	multimod --config=.multimod.yaml usage annotate markdown
+	bash ./container/run.sh multimod annotate

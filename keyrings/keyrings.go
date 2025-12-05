@@ -20,7 +20,6 @@ package keyrings
 import (
 	"context"
 	"io/fs"
-	"sync"
 	"syscall"
 
 	"github.com/cloudengio/keyctl"
@@ -42,29 +41,25 @@ type options struct {
 
 // T provides access to linux kernel keyrings.
 type T struct {
-	mu   sync.Mutex
 	opts options
-	err  error
 }
 
 // New creates a new keyrings.T. If WithKeyring is not specified then the
 // session keyring is used.
-func New(opts ...Option) *T {
+func New(opts ...Option) (*T, error) {
 	o := options{}
 	for _, opt := range opts {
 		opt(&o)
 	}
 	kr := &T{opts: o}
 	if o.keyring == nil {
-		kr.opts.keyring, kr.err = keyctl.SessionKeyring()
+		skr, err := keyctl.SessionKeyring()
+		if err != nil {
+			return nil, err
+		}
+		kr.opts.keyring = skr
 	}
-	return kr
-}
-
-func (s *T) error() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.err
+	return kr, nil
 }
 
 func mapError(err error) error {
@@ -82,17 +77,12 @@ func mapError(err error) error {
 }
 
 func (s *T) get(name string) (*keyctl.Key, error) {
-	if err := s.error(); err != nil {
-		return nil, err
-	}
 	key, err := s.opts.keyring.Search(name)
 	return key, mapError(err)
 }
 
-func (s *T) ReadFileCtx(ctx context.Context, name string) ([]byte, error) {
-	if err := s.error(); err != nil {
-		return nil, err
-	}
+// ReadFileCtx reads a secret from the kernel keyring.
+func (s *T) ReadFileCtx(_ context.Context, name string) ([]byte, error) {
 	key, err := s.get(name)
 	if err != nil {
 		return nil, err
@@ -100,18 +90,22 @@ func (s *T) ReadFileCtx(ctx context.Context, name string) ([]byte, error) {
 	return key.Get()
 }
 
-func (s *T) WriteFileCtx(ctx context.Context, name string, data []byte) error {
-	if err := s.error(); err != nil {
-		return err
-	}
+func (s *T) ReadFile(name string) ([]byte, error) {
+	return s.ReadFileCtx(context.Background(), name)
+}
+
+// WriteFileCtx writes a secret to the kernel keyring. The fs.FileMode parameter is ignored.
+func (s *T) WriteFileCtx(_ context.Context, name string, data []byte, _ fs.FileMode) error {
 	_, err := s.opts.keyring.Add(name, data)
 	return err
 }
 
-func (s *T) Delete(ctx context.Context, name string) error {
-	if err := s.error(); err != nil {
-		return err
-	}
+func (s *T) WriteFile(name string, data []byte, mode fs.FileMode) error {
+	return s.WriteFileCtx(context.Background(), name, data, mode)
+}
+
+// Delete removes a secret from the kernel keyring.
+func (s *T) Delete(_ context.Context, name string) error {
 	key, err := s.get(name)
 	if err != nil {
 		return err

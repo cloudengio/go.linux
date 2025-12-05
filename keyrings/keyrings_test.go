@@ -18,19 +18,32 @@ import (
 	"testing"
 	"time"
 
+	"cloudeng.io/file"
 	"cloudeng.io/linux/keyrings"
 )
+
+func init() {
+	var rf file.ReadFileFS
+	var wf file.WriteFileFS
+	var err error
+	rf, err = keyrings.New()
+	wf, err = keyrings.New()
+	_, _, _ = rf, wf, err
+}
 
 func TestKeyrings(t *testing.T) {
 	ctx := context.Background()
 	joinSessionKeyring(t)
-	kr := keyrings.New()
+	kr, err := keyrings.New()
+	if err != nil {
+		t.Fatalf("New failed: %v", err)
+	}
 
 	name := fmt.Sprintf("test-key-%d", time.Now().UnixNano())
 	data := []byte("secret-data")
 
 	// Test Write
-	if err := kr.WriteFileCtx(ctx, name, data); err != nil {
+	if err := kr.WriteFileCtx(ctx, name, data, 0); err != nil {
 		t.Fatalf("WriteFileCtx %v failed: %v", name, err)
 	}
 
@@ -90,7 +103,10 @@ func TestKeyctlInterop(t *testing.T) {
 		runKeyctl(t, "unlink", key, "@s")
 	}(out)
 
-	kr := keyrings.New()
+	kr, err := keyrings.New()
+	if err != nil {
+		t.Fatalf("New failed: %v", err)
+	}
 	got, err := kr.ReadFileCtx(ctx, name)
 	if err != nil {
 		t.Fatalf("ReadFileCtx failed: %v", err)
@@ -99,21 +115,23 @@ func TestKeyctlInterop(t *testing.T) {
 		t.Errorf("ReadFileCtx got %q, want %q", got, data)
 	}
 
-	then += 1
+	then++
 	name = fmt.Sprintf("test-key-%d", then)
 	data = "secret-data"
 
-	if err := kr.WriteFileCtx(ctx, name, []byte(data)); err != nil {
+	if err := kr.WriteFileCtx(ctx, name, []byte(data), 0); err != nil {
 		t.Fatalf("WriteFileCtx %v failed: %v", name, err)
 	}
 
 	out = runKeyctl(t, "search", "@s", "user", name)
 	defer func() {
-		kr.Delete(ctx, name)
+		if err := kr.Delete(ctx, name); err != nil {
+			t.Logf("Delete failed: %v", err)
+		}
 	}()
 
 	out = runKeyctl(t, "print", out)
-	if string(out) != data {
+	if out != data {
 		t.Errorf("runKeyctl: print got %q, want %q", out, data)
 	}
 
