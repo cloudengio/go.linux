@@ -25,10 +25,9 @@ import (
 func init() {
 	var rf file.ReadFileFS
 	var wf file.WriteFileFS
-	var err error
-	rf, err = keyrings.New()
-	wf, err = keyrings.New()
-	_, _, _ = rf, wf, err
+	rf, _ = keyrings.New()
+	wf, _ = keyrings.New()
+	_, _ = rf, wf
 }
 
 func TestKeyrings(t *testing.T) {
