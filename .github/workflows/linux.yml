@@ -17,11 +17,13 @@ jobs:
       - uses: cloudengio/.github/.github/actions/go@main
         with:
           go-version: "1.25.x"
-      - run: multimod --config=.multimod.yaml test
+      - name: test
+        run: |
+          multimod --config=.multimod.yaml test
 
   lint:
     uses: cloudengio/.github/.github/workflows/go-lint-multimod.yml@main
     with:
       runner: |
-        [ ubuntu-latest ]
+        [ "ubuntu-latest" ]
       go-version: "1.25.x"

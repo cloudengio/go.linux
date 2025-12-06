@@ -1,6 +1,6 @@
 module cloudeng.io/linux
 
-go 1.25.4
+go 1.25.5
 
 require (
 	github.com/cloudengio/keyctl v0.0.0-20251205212509-b187ca61e8c2
