@@ -6,6 +6,7 @@ require (
 	cloudeng.io/cmdutil v0.0.0-20251208163045-9b42e92aeda3
 	cloudeng.io/file v0.0.0-20251208163045-9b42e92aeda3
 	cloudeng.io/macos v0.0.0-20251207233308-ae8bb6b24e65
+	cloudeng.io/os v0.0.0-20251120181725-ae601f12dbbf
 	cloudeng.io/security v0.0.0-20251208163045-9b42e92aeda3
 	github.com/cloudengio/keyctl v0.0.0-20251205212509-b187ca61e8c2
 )
