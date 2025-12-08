@@ -39,6 +39,11 @@ func (dc dockerCmds) run(ctx context.Context, f any, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err := os.Remove(profile); err != nil {
+			fmt.Fprintln(os.Stderr, "failed to remove seccomp profile:", err)
+		}
+	}()
 	dockerArgs := []string{"run", "-i", "--security-opt", "seccomp=" + profile}
 	for _, a := range args {
 		switch a {

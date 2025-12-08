@@ -5,13 +5,11 @@ FROM golang:1.25 AS builder
 
 WORKDIR /go/src/app
 
-COPY ./*.go .
-RUN ls
-RUN go mod init cloudeng.io/linux/cmd/docker-entrypoint
-RUN go mod download
-RUN go mod tidy
-RUN ls
-RUN go build -o docker-entrypoint .
+COPY . .
+RUN go mod init cloudeng.io/linux/cmd/docker-entrypoint && \
+    go mod download && \
+    go mod tidy
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o docker-entrypoint .
 
 # Stage 2: Create the final image
 FROM alpine:3.19
