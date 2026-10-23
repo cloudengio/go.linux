@@ -10,20 +10,12 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: cloudengio/.github/.github/actions/go@main
-        with:
-          go-version: "1.25.x"
-      - name: test
-        run: |
-          multimod --config=.multimod.yaml test
-
-  lint:
-    uses: cloudengio/.github/.github/workflows/go-lint-multimod.yml@main
+  test-lint:
+    uses: cloudengio/.github/.github/workflows/go-test-multimod.yml@main
     with:
       runner: |
-        [ "ubuntu-latest" ]
-      go-version: "1.25.x"
+        [ "self-hosted", "linux", "arm64" ]
+      go-versions: |
+        [ ">=1.27.2" ]
+      with-lint: true
+      with-govuln: true
