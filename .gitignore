@@ -30,3 +30,9 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+.gograph/
+.agents/
+GEMINI.md
+CLAUDE.md
+.mcp.json
